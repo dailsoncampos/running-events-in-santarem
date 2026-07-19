@@ -1,0 +1,11 @@
+.git
+.gitignore
+.claude
+log/*
+tmp/*
+*.log
+*.swp
+.env
+.DS_Store
+node_modules
+coverage
