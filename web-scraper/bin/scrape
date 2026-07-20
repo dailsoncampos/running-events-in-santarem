@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+require_relative '../lib/scraper'
+
+Scraper::EventScraper.new.save_events
+
+event_store = Scraper::EventStore.new(Scraper.data_path('events.csv'))
+event_store.all.reject(&:scraped?).each do |event|
+  Scraper::ClaxParser.new(event).parse_and_save
+end

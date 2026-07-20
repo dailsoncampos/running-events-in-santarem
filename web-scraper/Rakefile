@@ -1,6 +1,22 @@
-# Add your own tasks in files placed in lib/tasks ending in .rake,
-# for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
+require_relative 'lib/scraper'
 
-require_relative "config/application"
+namespace :scrape do
+  desc 'Scrape and save running events from Santarém into data/events.csv'
+  task :events do
+    Scraper::EventScraper.new.save_events
+  end
 
-Rails.application.load_tasks
+  desc 'Parse CLAX result files for events not yet scraped into data/runners.csv'
+  task :runners do
+    event_store = Scraper::EventStore.new(Scraper.data_path('events.csv'))
+
+    event_store.all.reject(&:scraped?).each do |event|
+      Scraper::ClaxParser.new(event).parse_and_save
+    end
+  end
+
+  desc 'Run the full scrape: events, then runners for each new event'
+  task all: %i[events runners]
+end
+
+task default: 'scrape:all'
