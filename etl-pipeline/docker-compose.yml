@@ -1,0 +1,16 @@
+services:
+  etl:
+    build: .
+    image: crono-santarem-etl:latest
+    env_file:
+      - .env
+    environment:
+      DATA_DIR: /app/data
+      LOG_DIR: /app/logs
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      # Alternative to AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY in .env: mount a
+      # local AWS profile instead of putting static keys in the env file.
+      # - ~/.aws:/root/.aws:ro
+    command: ["--stages", "bronze", "silver", "gold"]
