@@ -104,7 +104,7 @@ Credentials are resolved through boto3's normal chain — nothing is hardcoded i
 
 `S3_ENDPOINT_URL` is available for pointing at LocalStack/MinIO during local testing.
 
-Note: as of now the `web-scraper` Rails app has no export path that writes to S3 (data only lives in its own database) — that export job is the other half of this integration and isn't part of this pipeline.
+The `web-scraper` app uploads `data/events.csv` and `data/runners.csv` to the same `S3_EVENTS_KEY`/`S3_RUNNERS_KEY` whenever it has `S3_BUCKET` set (see `web-scraper/README.md`'s "S3 export" section) — that's the other half of this integration.
 
 ## Tests
 
