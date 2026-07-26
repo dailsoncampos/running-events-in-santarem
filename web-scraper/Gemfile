@@ -9,6 +9,10 @@ gem "httparty", "~> 0.21"
 # Rakefile task runner (Rails used to pull this in transitively; needed directly now)
 gem "rake", "~> 13.0"
 
+# S3 export of scraped CSVs (consumed by ../etl-pipeline)
+gem "aws-sdk-s3", "~> 1.0"
+gem "dotenv", "~> 3.0"
+
 group :development, :test do
   gem "rspec", "~> 3.12"
   gem "vcr", "~> 6.1"

@@ -7,3 +7,5 @@ event_store = Scraper::EventStore.new(Scraper.data_path('events.csv'))
 event_store.all.reject(&:scraped?).each do |event|
   Scraper::ClaxParser.new(event).parse_and_save
 end
+
+Scraper.upload_to_s3!
