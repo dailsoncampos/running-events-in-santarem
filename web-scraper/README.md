@@ -8,6 +8,7 @@ Service that scrapes race results from [cronosantarem.com.br](https://www.cronos
 - Automatic filtering to exclude other sports (cycling, swimming, trail, triathlon)
 - Parsing of `.clax` files (XML) with detailed runner results
 - Data storage as CSV, deduplicated on repeated runs
+- Optional upload of the resulting CSVs to S3 for downstream processing
 - Testing with RSpec, VCR, and WebMock
 
 ## Requirements
@@ -99,11 +100,48 @@ bundle exec rspec
 bundle exec rspec --format documentation
 ```
 
+## S3 export
+
+`rake scrape:all` (and `bin/scrape`) upload `data/events.csv` and
+`data/runners.csv` to S3 as their last step, so the `../etl-pipeline` app can
+read them from a bucket instead of needing local file access. This is a
+no-op unless `S3_BUCKET` is set — the test suite and a bare `bin/scrape`
+run with no AWS access needed by default.
+
+To point it at a real bucket, copy `.env.example` to `.env` and fill in:
+
+```bash
+# .env
+S3_BUCKET=my-running-events-in-santarem-bucket
+S3_EVENTS_KEY=raw/events.csv
+S3_RUNNERS_KEY=raw/runners.csv
+AWS_REGION=us-east-1
+```
+
+These match the defaults `etl-pipeline`'s bronze layer already expects, so no
+extra configuration is needed on that side. Credentials are resolved through
+the AWS SDK's normal chain — nothing is hardcoded in the code:
+
+- **Local dev**: set `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` in `.env`, or
+  mount your `~/.aws` profile by uncommenting the volume line in
+  `docker-compose.yml`.
+- **Production (ECS/EC2/EKS)**: attach an IAM role/task role with
+  `s3:PutObject` on the bucket — no keys needed at all.
+
+`S3_ENDPOINT_URL` is available for pointing at LocalStack/MinIO during local
+testing.
+
+To upload without re-scraping:
+
+```bash
+bundle exec rake scrape:upload
+```
+
 ## Project Structure
 
 ```
 lib/
-├── scraper.rb                # Entrypoint: requires everything, holds data_path/logger
+├── scraper.rb                # Entrypoint: requires everything, holds data_path/logger/upload_to_s3!
 └── scraper/
     ├── csv_store.rb          # Generic CSV read/upsert/write layer
     ├── event.rb               # Event value object
@@ -111,7 +149,8 @@ lib/
     ├── runner.rb               # Runner value object
     ├── runner_store.rb        # Runner persistence (data/runners.csv)
     ├── event_scraper.rb       # Scrapes and filters events
-    └── clax_parser.rb         # Parses .clax XML into runners
+    ├── clax_parser.rb         # Parses .clax XML into runners
+    └── s3_uploader.rb         # Uploads the two CSVs to S3 (for ../etl-pipeline)
 
 data/
 ├── events.csv                 # generated, gitignored

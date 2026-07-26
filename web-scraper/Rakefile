@@ -15,8 +15,13 @@ namespace :scrape do
     end
   end
 
-  desc 'Run the full scrape: events, then runners for each new event'
-  task all: %i[events runners]
+  desc 'Upload data/events.csv and data/runners.csv to S3 (no-op unless S3_BUCKET is set)'
+  task :upload do
+    Scraper.upload_to_s3!
+  end
+
+  desc 'Run the full scrape: events, then runners for each new event, then upload to S3'
+  task all: %i[events runners upload]
 end
 
 task default: 'scrape:all'
