@@ -1,4 +1,4 @@
-# Crono Santarém Web Scraper
+# Running Race in Santarém Web Scraper
 
 Service that scrapes race results from [cronosantarem.com.br](https://www.cronosantarem.com.br/resultados-eventos) and stores them as CSV files.
 

@@ -1,7 +1,7 @@
 services:
   etl:
     build: .
-    image: crono-santarem-etl:latest
+    image: running-events-in-santarem-etl:latest
     env_file:
       - .env
     environment:

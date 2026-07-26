@@ -92,7 +92,7 @@ To point it at a real bucket:
 
 ```bash
 # .env
-S3_BUCKET=my-crono-santarem-bucket
+S3_BUCKET=my-running-events-in-santarem-bucket
 S3_EVENTS_KEY=raw/events.csv
 S3_RUNNERS_KEY=raw/runners.csv
 AWS_REGION=us-east-1
