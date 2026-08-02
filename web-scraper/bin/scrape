@@ -4,8 +4,7 @@ require_relative '../lib/scraper'
 Scraper::EventScraper.new.save_events
 
 event_store = Scraper::EventStore.new(Scraper.data_path('events.csv'))
-event_store.all.reject(&:scraped?).each do |event|
-  Scraper::ClaxParser.new(event).parse_and_save
-end
+events = event_store.all.reject(&:scraped?)
+Scraper::RunnerImporter.new(event_store: event_store).import(events)
 
 Scraper.upload_to_s3!

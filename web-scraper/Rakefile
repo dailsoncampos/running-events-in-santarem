@@ -9,10 +9,9 @@ namespace :scrape do
   desc 'Parse CLAX result files for events not yet scraped into data/runners.csv'
   task :runners do
     event_store = Scraper::EventStore.new(Scraper.data_path('events.csv'))
+    events = event_store.all.reject(&:scraped?)
 
-    event_store.all.reject(&:scraped?).each do |event|
-      Scraper::ClaxParser.new(event).parse_and_save
-    end
+    Scraper::RunnerImporter.new(event_store: event_store).import(events)
   end
 
   desc 'Upload data/events.csv and data/runners.csv to S3 (no-op unless S3_BUCKET is set)'
