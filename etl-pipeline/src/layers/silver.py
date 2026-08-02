@@ -1,7 +1,7 @@
 """Silver layer: clean, validate and conform bronze events/runners into typed records.
 
 Mirrors the upsert keys the web-scraper app itself uses (see
-web-scraper/app/services/event_scraper.rb and clax_parser.rb) so dedup here
+web-scraper/lib/scraper/event_store.rb and runner_store.rb) so dedup here
 stays consistent with how the source system treats identity:
   events:  unique by (name, event_date)
   runners: unique by (event_id, bib_number, name)

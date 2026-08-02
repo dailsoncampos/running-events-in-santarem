@@ -3,7 +3,7 @@
 Source is s3://S3_BUCKET/{S3_EVENTS_KEY,S3_RUNNERS_KEY} when S3_BUCKET is
 configured, otherwise falls back to the local RAW_DIR files (used by tests
 and quick local runs so no AWS access is required). These mirror the
-`events` and `runners` tables produced by the web-scraper (Rails) app.
+`events.csv` and `runners.csv` files produced by the web-scraper app.
 """
 import io
 from datetime import datetime, timezone

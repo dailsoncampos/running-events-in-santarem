@@ -14,8 +14,9 @@ BRONZE_DIR = DATA_DIR / "bronze"
 SILVER_DIR = DATA_DIR / "silver"
 GOLD_DIR = DATA_DIR / "gold"
 
-# Source files exported by the web-scraper (Rails) app: one row per
-# `events` record and one row per `runners` record (see web-scraper/db/schema.rb).
+# Source files exported by the web-scraper app: one row per
+# `events` record and one row per `runners` record (see web-scraper/README.md's
+# "Data Model" section).
 EVENTS_SOURCE_FILE = os.getenv("EVENTS_SOURCE_FILE", "events.csv")
 RUNNERS_SOURCE_FILE = os.getenv("RUNNERS_SOURCE_FILE", "runners.csv")
 
