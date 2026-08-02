@@ -2,7 +2,7 @@
 
 A Python ETL pipeline using the **medallion architecture** (bronze → silver → gold), containerized with Docker.
 
-Processes race-results data collected by the `web-scraper` (Rails) app in this repo — [CronoSantarém](https://www.cronosantarem.com.br) running events and their finisher results — after that app exports its `events` and `runners` tables to S3.
+Processes race-results data collected by the `web-scraper` app in this repo — [CronoSantarém](https://www.cronosantarem.com.br) running events and their finisher results — after that app exports its `events.csv` and `runners.csv` to S3.
 
 ## Architecture
 
@@ -30,12 +30,12 @@ Each layer reads only from the layer before it and is independently re-runnable.
 
 ### Source schema
 
-Bronze expects one CSV row per record from the Rails app's tables (see `web-scraper/db/schema.rb`):
+Bronze expects one CSV row per record from the web-scraper app's output files (see `web-scraper/README.md`'s "Data Model" section):
 
-- **events**: `id, name, event_date, city, result_url, clax_file_url, scraped_at, created_at, updated_at`
-- **runners**: `id, event_id, position, bib_number, name, club, gender, category, finish_time, average_pace, points, laps, best_lap, distance, created_at, updated_at`
+- **events**: `id, name, event_date, city, result_url, clax_file_url, scraped_at`
+- **runners**: `id, event_id, position, bib_number, name, club, gender, category, finish_time, average_pace, points, laps, best_lap, distance`
 
-`finish_time` and `average_pace` are free-text `H:MM:SS`/`M:SS` strings in the source (that's how the scraper's CLAX parser writes them); silver converts both to numeric seconds (`finish_time_seconds`, `pace_seconds_per_km`). Silver dedup keys mirror the upsert keys the Rails app itself uses: events by `(name, event_date)`, runners by `(event_id, bib_number, name)`.
+`finish_time` and `average_pace` are free-text `H:MM:SS`/`M:SS` strings in the source (that's how the scraper's CLAX parser writes them); silver converts both to numeric seconds (`finish_time_seconds`, `pace_seconds_per_km`). Silver dedup keys mirror the upsert keys the web-scraper app itself uses: events by `(name, event_date)`, runners by `(event_id, bib_number, name)`.
 
 ## Project structure
 
