@@ -33,7 +33,9 @@ bin/scrape
 
 This scrapes the events page, saves matching events to `data/events.csv`, then
 parses the `.clax` result file for every not-yet-scraped event into
-`data/runners.csv`.
+`data/runners.csv`. The `.clax` files are fetched concurrently (see
+"Parallelism" below); tune concurrency with `SCRAPE_CONCURRENCY` (default
+`8`).
 
 ### Run individual steps
 
@@ -149,7 +151,8 @@ lib/
     ├── runner.rb               # Runner value object
     ├── runner_store.rb        # Runner persistence (data/runners.csv)
     ├── event_scraper.rb       # Scrapes and filters events
-    ├── clax_parser.rb         # Parses .clax XML into runners
+    ├── clax_parser.rb         # Fetches + parses one event's .clax XML into runner rows
+    ├── runner_importer.rb     # Parallel fetch across events, single-threaded CSV write
     └── s3_uploader.rb         # Uploads the two CSVs to S3 (for ../etl-pipeline)
 
 data/
@@ -160,7 +163,8 @@ spec/
 └── scraper/
     ├── csv_store_spec.rb
     ├── event_scraper_spec.rb
-    └── clax_parser_spec.rb
+    ├── clax_parser_spec.rb
+    └── runner_importer_spec.rb
 ```
 
 ## Data Model
@@ -208,14 +212,51 @@ file back a single time via `persist!`.
 - **`EventScraper`** — fetches the events page, extracts the embedded
   `list_temp` JS array, filters to running events from Santarém, and upserts
   matches into `EventStore`.
-- **`ClaxParser`** — takes an `Event`, fetches its `.clax` XML file, and
-  upserts each result row into `RunnerStore`, then marks the event as scraped.
+- **`ClaxParser`** — takes an `Event` and fetches/parses its `.clax` XML file.
+  `#fetch_runners` returns parsed runner rows and touches no CSV state, so
+  it's safe to call from multiple threads at once. `#parse_and_save` wraps
+  that with an upsert + `persist!` for single-event use (still used directly
+  in its own tests).
+- **`RunnerImporter`** — orchestrates `scrape:runners`: fetches/parses every
+  pending event's `.clax` file concurrently, then writes all resulting
+  runners in one single-threaded pass. See "Parallelism" below for why the
+  fetch and the write are split like this.
 - **`CsvStore`** — the only file I/O in the project; both `EventStore` and
   `RunnerStore` are thin wrappers around it with entity-specific natural keys.
 
 Both services take their store (and a `Logger`) as constructor keyword
 arguments with sensible defaults, so tests can inject a store backed by a
 temp file instead of touching `data/*.csv`.
+
+## Parallelism
+
+`scrape:runners` fetches one `.clax` XML file per event over HTTP — an
+I/O-bound operation that parallelizes well. `RunnerImporter` runs these
+fetches concurrently across a small thread pool (`SCRAPE_CONCURRENCY` env
+var, default `8`) instead of the previous one-event-at-a-time loop.
+
+The CSV write is deliberately **not** parallelized. `CsvStore#save!` rewrites
+its entire file on every call — it has no append mode and no file locking.
+If two workers called `persist!` at the same time, whichever finished last
+would silently overwrite the other's rows, quietly losing data. So
+`RunnerImporter` keeps writes single-writer: every thread only returns parsed
+runner data in memory, and after all threads finish, one single-threaded pass
+upserts everything and calls `persist!` exactly once each on `RunnerStore`
+and `EventStore`. This also fixes a pre-existing performance problem: the old
+loop built a fresh `RunnerStore` per event, so it reloaded and rewrote the
+(now ~18k-row) `runners.csv` from scratch on every single event; the new flow
+loads and saves it once per run regardless of event count.
+
+Background job frameworks (e.g. Sidekiq) were considered and intentionally
+not adopted here. This is a one-shot batch script run via `rake`/cron/Docker,
+not a long-lived web app — adding Sidekiq would mean introducing Redis and a
+separate worker process purely to get concurrency that Ruby's stdlib
+`Thread`/`Queue` already provides for this I/O-bound workload, without fixing
+the underlying single-writer requirement on `CsvStore` (a job queue doesn't
+serialize CSV writes for free — that constraint has to be designed for
+regardless of the concurrency mechanism). If this ever needs durable retries,
+scheduling, or multi-process/multi-host fan-out, that tradeoff is worth
+revisiting.
 
 ## Known caveat
 

@@ -5,8 +5,8 @@ module Scraper
   class ClaxParser
     def initialize(
       event,
-      runner_store: RunnerStore.new(Scraper.data_path('runners.csv')),
-      event_store: EventStore.new(Scraper.data_path('events.csv')),
+      runner_store: nil,
+      event_store: nil,
       logger: Scraper.logger
     )
       @event = event
@@ -15,25 +15,42 @@ module Scraper
       @logger = logger
     end
 
-    def parse_and_save
-      return if @event.clax_file_url.to_s.empty?
+    # Fetches and parses the CLAX file for this event, returning an array of
+    # runner attribute hashes. Performs no CSV reads/writes, so it's safe to
+    # call from multiple threads at once (unlike #parse_and_save).
+    def fetch_runners
+      return [] if @event.clax_file_url.to_s.empty?
 
       xml_content = fetch_clax_file
-      return unless xml_content
+      return [] unless xml_content
 
-      runners_created = parse_runners_from_xml(xml_content)
-      @runner_store.persist!
+      parse_runners_from_xml(xml_content)
+    end
 
-      if runners_created > 0
-        @event_store.mark_scraped!(@event)
-        @event_store.persist!
-      end
+    def parse_and_save
+      runners_data = fetch_runners
+      return 0 if runners_data.empty?
+
+      runners_data.each { |runner_data| runner_store.upsert(event_id: @event.id, **runner_data) }
+      runner_store.persist!
+
+      runners_created = runners_data.size
+      event_store.mark_scraped!(@event)
+      event_store.persist!
 
       @logger.info("Created/updated #{runners_created} runners for event #{@event.name}")
       runners_created
     end
 
     private
+
+    def runner_store
+      @runner_store ||= RunnerStore.new(Scraper.data_path('runners.csv'))
+    end
+
+    def event_store
+      @event_store ||= EventStore.new(Scraper.data_path('events.csv'))
+    end
 
     def fetch_clax_file
       response = HTTParty.get(@event.clax_file_url)
@@ -69,26 +86,15 @@ module Scraper
       end
 
       results = doc.xpath('//Resultats/R')
-
-      runners_created = 0
       position = 0
 
-      results.each do |result|
+      results.each_with_object([]) do |result, runners|
         position += 1
         runner_data = extract_runner_data(result, engages_hash, position)
         next unless runner_data && !runner_data[:name].to_s.strip.empty?
 
-        runner = @runner_store.upsert(
-          event_id: @event.id,
-          bib_number: runner_data[:bib_number],
-          name: runner_data[:name],
-          **runner_data.reject { |key, _| %i[bib_number name].include?(key) }
-        )
-
-        runners_created += 1 if runner
+        runners << runner_data
       end
-
-      runners_created
     end
 
     def extract_runner_data(result_node, engages_hash, position)

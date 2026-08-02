@@ -11,6 +11,7 @@ require_relative 'scraper/runner'
 require_relative 'scraper/runner_store'
 require_relative 'scraper/event_scraper'
 require_relative 'scraper/clax_parser'
+require_relative 'scraper/runner_importer'
 require_relative 'scraper/s3_uploader'
 
 module Scraper
