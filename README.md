@@ -1,4 +1,4 @@
-# running-events-in-santarem
+# Running Events in Santarem
 
 ## English
 
