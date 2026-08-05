@@ -2,6 +2,8 @@ import pytest
 
 from src.layers import bronze, silver
 
+bronze.S3_BUCKET = ""
+
 
 @pytest.fixture(scope="session")
 def bronze_data():
