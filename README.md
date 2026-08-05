@@ -17,6 +17,9 @@ It is made up of two independent applications connected through Amazon S3:
   web-scraper (from S3 or a local fallback), cleans and deduplicates them,
   converts finish times/paces to numeric values, and builds business-ready
   marts such as per-event summaries and category podiums.
+- **[`orchestration`](orchestration/)** (Python, Prefect) — chains the two
+  apps above into one end-to-end run (scrape → upload → bronze → silver →
+  gold) with retries, logging, and an optional monthly schedule.
 
 **Data flow:**
 
@@ -31,9 +34,13 @@ data/events.csv, data/runners.csv  ──upload──▶  S3
                                      bronze → silver → gold (parquet)
 ```
 
+`orchestration/` sequences the two steps above end to end; see its README for
+running once or on a schedule.
+
 Each application has its own README with setup, usage, and architecture
-details: [`web-scraper/README.md`](web-scraper/README.md) and
-[`etl-pipeline/README.md`](etl-pipeline/README.md).
+details: [`web-scraper/README.md`](web-scraper/README.md),
+[`etl-pipeline/README.md`](etl-pipeline/README.md), and
+[`orchestration/README.md`](orchestration/README.md).
 
 ---
 
@@ -57,6 +64,9 @@ aplicações independentes, conectadas através do Amazon S3:
   duplicidades dos dados, converte tempos de prova/ritmo para valores
   numéricos e constrói marts prontos para análise, como resumos por evento e
   pódios por categoria.
+- **[`orchestration`](orchestration/)** (Python, Prefect) — encadeia as duas
+  aplicações acima em uma execução ponta a ponta (scrape → upload → bronze →
+  silver → gold), com retries, logging e agendamento mensal opcional.
 
 **Fluxo de dados:**
 
@@ -71,6 +81,10 @@ data/events.csv, data/runners.csv  ──upload──▶  S3
                                      bronze → silver → gold (parquet)
 ```
 
+`orchestration/` encadeia as duas etapas acima ponta a ponta; veja o README
+dessa pasta para rodar uma vez ou em agendamento.
+
 Cada aplicação tem seu próprio README com detalhes de instalação, uso e
-arquitetura: [`web-scraper/README.md`](web-scraper/README.md) e
-[`etl-pipeline/README.md`](etl-pipeline/README.md).
+arquitetura: [`web-scraper/README.md`](web-scraper/README.md),
+[`etl-pipeline/README.md`](etl-pipeline/README.md) e
+[`orchestration/README.md`](orchestration/README.md).
