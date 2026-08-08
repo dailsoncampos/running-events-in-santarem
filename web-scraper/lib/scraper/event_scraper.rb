@@ -23,10 +23,14 @@ module Scraper
     end
 
     def save_events
-      events = scrape_events
+      already_scraped = @event_store.all
+                                     .select(&:scraped?)
+                                     .map { |e| [e.name, e.event_date] }
+                                     .to_set
 
-      events.each do |event_data|
+      scrape_events.each do |event_data|
         next unless should_save_event?(event_data)
+        next if already_scraped.include?([event_data[:name], event_data[:date].to_s])
 
         if event_data[:name].to_s.strip.empty? || event_data[:city].to_s.strip.empty? || event_data[:date].nil?
           @logger.error("Skipped invalid event: #{event_data.inspect}")

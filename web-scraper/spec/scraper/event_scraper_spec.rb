@@ -84,6 +84,33 @@ RSpec.describe Scraper::EventScraper do
       scraper.save_events
       expect { scraper.save_events }.not_to change { event_rows.size }
     end
+
+    context 'when an event was already fully scraped in a previous run' do
+      before do
+        scraper.save_events
+        event_store.mark_scraped!(event_store.all.first)
+        event_store.persist!
+      end
+
+      it 'does not re-upsert the event' do
+        expect(event_store).not_to receive(:upsert)
+        scraper.save_events
+      end
+
+      it 'still saves a new event found alongside the already-scraped one' do
+        new_event = {
+          name: 'Santarém City Run',
+          date: Date.new(2024, 11, 20),
+          city: 'Santarém',
+          result_url: 'https://www.cronosantarem.com.br/resultados/other.html',
+          clax_file_url: 'https://www.cronosantarem.com.br/resultados/eventos/2024/other/other.clax'
+        }
+        allow(scraper).to receive(:scrape_events).and_return([sample_events.first, new_event])
+
+        expect { scraper.save_events }.to change { event_rows.size }.by(1)
+        expect(event_rows.map(&:name)).to include('Santarém City Run')
+      end
+    end
   end
 
   describe 'filtering logic' do
