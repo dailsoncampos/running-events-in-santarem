@@ -45,21 +45,35 @@ API (no server to stand up) — logs stream to stdout. Either task retries
 once after 60s on failure; a second failure surfaces the error and stops the
 flow (the etl step never runs off of a partially-failed scrape).
 
-## Schedule (monthly cron)
+## Schedule (dynamic, event-driven)
 
-```bash
-python serve.py
+Events in Santarém don't follow a fixed calendar. `check_and_run.py` handles
+this by fetching the next event date from the CronoSantarém events page each
+day and triggering the pipeline exactly 1 day after the event — once results
+are published.
+
+Set up a system cron to call it daily:
+
+```
+# /etc/cron.d/santarem-pipeline  (adjust user and path as needed)
+0 3 * * *  user  cd /path/to/repo/orchestration && .venv/bin/python check_and_run.py >> /var/log/santarem-pipeline.log 2>&1
 ```
 
-Registers a `0 3 1 * *` (03:00 on the 1st of each month) schedule and keeps polling for it —
-this process needs to stay running for scheduled runs to fire (systemd unit,
-tmux/screen, or a small always-on host process; not something `cron` itself
-launches, since Prefect owns the schedule here). Stopping the process just
-pauses future runs, it doesn't affect data already produced by prior runs.
+On days that are not pipeline days the script exits immediately with no
+side effects. No long-running process to keep alive.
 
-For monitoring/history beyond stdout logs, point `PREFECT_API_URL` at a free
-[Prefect Cloud](https://www.prefect.io/cloud) workspace or a self-hosted
-`prefect server start` — neither is required for the above to work locally.
+To verify manually what date it would target today:
+
+```bash
+python -c "from next_event import next_event_date; from datetime import timedelta; d = next_event_date(); print(f'Next event: {d} | Pipeline runs: {d + timedelta(days=1)}')"
+```
+
+## Run tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests/
+```
 
 ## Why not run the orchestrator itself in Docker?
 

@@ -1,13 +1,11 @@
-"""Long-running process that serves the pipeline on a monthly cron schedule.
+"""Manual fallback: serves the pipeline on a fixed monthly cron via Prefect.
 
-`Flow.serve()` registers the schedule against Prefect's local ephemeral API
-and polls it from this same process — no separate Prefect server/Postgres to
-run or maintain. Keep this process alive (systemd unit, tmux, a small always
--on container, etc.) for scheduled runs to actually fire; killing it just
-stops future runs, it doesn't affect anything already scraped/processed.
+For automated scheduling keyed to actual event dates, use check_and_run.py
+with a system cron instead — it fetches the next event date dynamically and
+only triggers the pipeline 1 day after the event.
 
-For a one-off run instead (e.g. to test the flow, or trigger it from CI),
-run `flows/santarem_pipeline.py` directly rather than this file.
+Use this file only when you want Prefect to manage the schedule internally
+(requires this process to stay alive — systemd unit, tmux, etc.).
 """
 from flows.santarem_pipeline import santarem_pipeline
 
