@@ -1,0 +1,27 @@
+name: web-scraper CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["web-scraper/**"]
+  pull_request:
+    paths: ["web-scraper/**"]
+
+defaults:
+  run:
+    working-directory: web-scraper
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2.2"
+          bundler-cache: true
+          working-directory: web-scraper
+
+      - name: Run RSpec
+        run: bundle exec rspec --format documentation
