@@ -3,9 +3,9 @@ name: web-scraper CI
 on:
   push:
     branches: [main]
-    paths: ["web-scraper/**"]
+    paths: ["web-scraper/**", ".github/workflows/web-scraper-ci.yml"]
   pull_request:
-    paths: ["web-scraper/**"]
+    paths: ["web-scraper/**", ".github/workflows/web-scraper-ci.yml"]
 
 defaults:
   run:

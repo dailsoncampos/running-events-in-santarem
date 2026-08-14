@@ -3,9 +3,9 @@ name: orchestration CI
 on:
   push:
     branches: [main]
-    paths: ["orchestration/**"]
+    paths: ["orchestration/**", ".github/workflows/orchestration-ci.yml"]
   pull_request:
-    paths: ["orchestration/**"]
+    paths: ["orchestration/**", ".github/workflows/orchestration-ci.yml"]
 
 defaults:
   run:

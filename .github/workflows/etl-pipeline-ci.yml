@@ -3,9 +3,9 @@ name: etl-pipeline CI
 on:
   push:
     branches: [main]
-    paths: ["etl-pipeline/**"]
+    paths: ["etl-pipeline/**", ".github/workflows/etl-pipeline-ci.yml"]
   pull_request:
-    paths: ["etl-pipeline/**"]
+    paths: ["etl-pipeline/**", ".github/workflows/etl-pipeline-ci.yml"]
 
 defaults:
   run:
