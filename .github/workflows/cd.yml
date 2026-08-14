@@ -1,0 +1,65 @@
+name: Build & Push Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web-scraper/**"
+      - "etl-pipeline/**"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web-scraper: ${{ steps.filter.outputs.web-scraper }}
+      etl-pipeline: ${{ steps.filter.outputs.etl-pipeline }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web-scraper:
+              - 'web-scraper/**'
+            etl-pipeline:
+              - 'etl-pipeline/**'
+
+  push-web-scraper:
+    needs: changes
+    if: needs.changes.outputs.web-scraper == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: web-scraper
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/santarem-web-scraper:latest
+
+  push-etl-pipeline:
+    needs: changes
+    if: needs.changes.outputs.etl-pipeline == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: etl-pipeline
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/santarem-etl-pipeline:latest
