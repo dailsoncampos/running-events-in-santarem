@@ -55,11 +55,22 @@ etl-pipeline/
 │   ├── bronze/             # generated, gitignored
 │   ├── silver/             # generated, gitignored
 │   └── gold/                # generated, gitignored
+├── docs/
+│   └── publishing-gold-data.md  # publishing gold to S3/Athena/QuickSight/Looker Studio
 ├── tests/                  # pytest, one file per layer
 ├── Dockerfile
 ├── docker-compose.yml
 └── requirements.txt
 ```
+
+## Publishing gold data downstream
+
+The gold layer produces business-ready marts (`event_summary.parquet`,
+`category_podium.parquet`), but the pipeline currently stops there — the files stay local
+and aren't uploaded anywhere. See
+[`docs/publishing-gold-data.md`](docs/publishing-gold-data.md) for a guide to publishing
+them to S3 and querying them from Athena, Amazon QuickSight, Google Looker Studio, or any
+other Athena-compatible BI tool.
 
 ## Run locally
 
