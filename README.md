@@ -4,7 +4,18 @@
 
 This project collects, stores, and processes results from running events held in
 Santarém, Brazil, published on [CronoSantarém](https://www.cronosantarem.com.br).
-It is made up of two independent applications connected through Amazon S3:
+
+**The problem:** each event's results page offers PDF and XLS download
+buttons, but neither works as advertised. The PDF button doesn't produce a
+file at all, and the XLS button downloads a file with an `.xls` extension
+whose content is actually raw HTML markup (`<table>`, `<td>`, inline styles,
+HTML entities) rather than real spreadsheet data — unusable for any kind of
+analysis without extensive manual cleanup. That gap is what motivated this
+project: instead of depending on those broken exports, `web-scraper` reads
+the results straight from the event's underlying `.clax` data source and
+turns them into clean, structured CSV files fit for downstream processing.
+
+The project is made up of two independent applications connected through Amazon S3:
 
 - **[`web-scraper`](web-scraper/)** (Ruby) — scrapes the CronoSantarém results page,
   filters it down to running events (excluding cycling, swimming, trail, and
@@ -48,8 +59,20 @@ details: [`web-scraper/README.md`](web-scraper/README.md),
 
 Este projeto coleta, armazena e processa resultados de corridas de rua
 realizadas em Santarém, Pará, publicados no
-[CronoSantarém](https://www.cronosantarem.com.br). Ele é composto por duas
-aplicações independentes, conectadas através do Amazon S3:
+[CronoSantarém](https://www.cronosantarem.com.br).
+
+**O problema:** a página de resultados de cada evento oferece botões de
+download em PDF e XLS, mas nenhum dos dois funciona como deveria. O botão de
+PDF simplesmente não gera nenhum arquivo, e o botão de XLS baixa um arquivo
+com extensão `.xls` cujo conteúdo, na verdade, é HTML puro (`<table>`,
+`<td>`, estilos inline, entidades HTML) em vez de dados reais de planilha —
+inutilizável para qualquer tipo de análise sem uma limpeza manual extensa.
+Essa lacuna foi o que motivou o projeto: em vez de depender dessas
+exportações quebradas, o `web-scraper` lê os resultados diretamente da fonte
+de dados `.clax` de cada evento e os transforma em arquivos CSV limpos e
+estruturados, prontos para processamento posterior.
+
+O projeto é composto por duas aplicações independentes, conectadas através do Amazon S3:
 
 - **[`web-scraper`](web-scraper/)** (Ruby) — busca a página de resultados do
   CronoSantarém, filtra apenas eventos de corrida de rua (excluindo ciclismo,
