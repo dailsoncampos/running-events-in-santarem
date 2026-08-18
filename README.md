@@ -10,7 +10,16 @@ buttons, but neither works as advertised. The PDF button doesn't produce a
 file at all, and the XLS button downloads a file with an `.xls` extension
 whose content is actually raw HTML markup (`<table>`, `<td>`, inline styles,
 HTML entities) rather than real spreadsheet data — unusable for any kind of
-analysis without extensive manual cleanup. That gap is what motivated this
+analysis without extensive manual cleanup.
+
+**PDF download option***
+<img width="449" height="204" alt="download-pdf-print" src="https://github.com/user-attachments/assets/b91d03ba-6120-4b8f-9b68-378eea4d59ef" />
+
+**XLS File content**
+<img width="2416" height="898" alt="download-xls-print" src="https://github.com/user-attachments/assets/5ae55878-6dd6-418b-a66b-75a40b5d890b" />
+
+
+That gap is what motivated this
 project: instead of depending on those broken exports, `web-scraper` reads
 the results straight from the event's underlying `.clax` data source and
 turns them into clean, structured CSV files fit for downstream processing.
